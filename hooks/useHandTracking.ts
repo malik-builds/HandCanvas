@@ -53,6 +53,45 @@ function isThumbExtended(lm: HandLandmark[], handedLabel: string): boolean {
   return tip.x < ip.x;
 }
 
+function classifyGesture(
+  lm: HandLandmark[],
+  handedLabel: string
+): GestureMode {
+  const index = isFingerExtendedY(lm, 8, 6);
+  const middle = isFingerExtendedY(lm, 12, 10);
+  const ring = isFingerExtendedY(lm, 16, 14);
+  const pinky = isFingerExtendedY(lm, 20, 18);
+  const thumb = isThumbExtended(lm, handedLabel);
+
+  const fourOpen = index && middle && ring && pinky;
+  const peace = index && middle && !ring && !pinky;
+
+  if (fourOpen && thumb) {
+    return "pause";
+  }
+
+  if (peace) {
+    return "erase";
+  }
+
+  const fist =
+    !index &&
+    !middle &&
+    !ring &&
+    !pinky &&
+    !thumb;
+
+  if (fist) {
+    return "idle";
+  }
+
+  if (index && !middle) {
+    return "draw";
+  }
+
+  return "pause";
+}
+
 export interface UseHandTrackingOptions {
   videoElement: HTMLVideoElement | null;
   canvasWidth: number;
