@@ -92,11 +92,36 @@ function classifyGesture(
   return "pause";
 }
 
+function mirrorX(x: number, width: number): number {
+  return width - x * width;
+}
+
+function toCanvasPoint(
+  lm: HandLandmark[],
+  width: number,
+  height: number,
+  mode: GestureMode
+): Point2D {
+  if (mode === "erase") {
+    const ix = mirrorX(lm[8].x, width);
+    const iy = lm[8].y * height;
+    const mx = mirrorX(lm[12].x, width);
+    const my = lm[12].y * height;
+    return { x: (ix + mx) / 2, y: (iy + my) / 2 };
+  }
+  return {
+    x: mirrorX(lm[8].x, width),
+    y: lm[8].y * height,
+  };
+}
+
 export interface UseHandTrackingOptions {
   videoElement: HTMLVideoElement | null;
+  /** Drawing canvas dimensions (for mirrored coordinates) */
   canvasWidth: number;
   canvasHeight: number;
   enabled: boolean;
+  /** Fires after each MediaPipe result — safe place to read snapshotRef and paint the main canvas */
   onFrame?: (snapshot: HandTrackingSnapshot) => void;
   onClearHoldComplete?: () => void;
 }
@@ -106,6 +131,7 @@ export interface UseHandTrackingResult {
   fingerPosition: Point2D | null;
   isTracking: boolean;
   clearHoldProgress: number;
+  /** Refs mirror the latest frame — use inside MediaPipe callbacks / rAF without stale state */
   snapshotRef: React.MutableRefObject<HandTrackingSnapshot>;
 }
 
