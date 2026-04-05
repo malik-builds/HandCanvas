@@ -36,6 +36,23 @@ function loadScriptOnce(src: string): Promise<void> {
   });
 }
 
+function isFingerExtendedY(
+  lm: HandLandmark[],
+  tipIdx: number,
+  pipIdx: number
+): boolean {
+  return lm[tipIdx].y < lm[pipIdx].y;
+}
+
+function isThumbExtended(lm: HandLandmark[], handedLabel: string): boolean {
+  const tip = lm[4];
+  const ip = lm[3];
+  if (handedLabel === "Right") {
+    return tip.x > ip.x;
+  }
+  return tip.x < ip.x;
+}
+
 export interface UseHandTrackingOptions {
   videoElement: HTMLVideoElement | null;
   canvasWidth: number;
