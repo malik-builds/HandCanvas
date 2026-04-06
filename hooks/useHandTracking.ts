@@ -73,9 +73,11 @@ function toCanvasPoint(lm: HandLandmark[], width: number, height: number, mode: 
 
 export interface UseHandTrackingOptions {
   videoElement: HTMLVideoElement | null;
+  /** Drawing canvas dimensions (for mirrored coordinates) */
   canvasWidth: number;
   canvasHeight: number;
   enabled: boolean;
+  /** Fires after each MediaPipe result — safe place to read snapshotRef and paint the main canvas */
   onFrame?: (snapshot: HandTrackingSnapshot) => void;
   onClearHoldComplete?: () => void;
 }
@@ -85,6 +87,7 @@ export interface UseHandTrackingResult {
   fingerPosition: Point2D | null;
   isTracking: boolean;
   clearHoldProgress: number;
+  /** Refs mirror the latest frame — use inside MediaPipe callbacks / rAF without stale state */
   snapshotRef: React.MutableRefObject<HandTrackingSnapshot>;
 }
 
@@ -100,10 +103,14 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
   const [isTracking, setIsTracking] = useState(false);
   const [clearHoldProgress, setClearHoldProgress] = useState(0);
 
+  const fistStartRef = useRef<number | null>(null);
+  const clearFiredRef = useRef(false);
   const handsRef = useRef<{ close: () => void } | null>(null);
   const cameraRef = useRef<{ stop: () => void } | null>(null);
   const prevGestureRef = useRef<GestureMode>("idle");
 
+  const onClearHoldCompleteRef = useRef(onClearHoldComplete);
+  onClearHoldCompleteRef.current = onClearHoldComplete;
   const onFrameRef = useRef(onFrame);
   onFrameRef.current = onFrame;
 
@@ -150,6 +157,8 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
         const label = results.multiHandedness?.[0]?.label === "Left" ? "Left" : "Right";
 
         if (!handLm) {
+          fistStartRef.current = null;
+          clearFiredRef.current = false;
           const snap: HandTrackingSnapshot = {
             gestureMode: "idle", fingerPosition: null, isTracking: false, landmarks: null, clearHoldProgress: 0,
           };
@@ -159,13 +168,44 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
           return;
         }
 
-        const mode = classifyGesture(handLm, label);
+        let mode = classifyGesture(handLm, label);
+
+        const now = performance.now();
+        const fourCurled =
+          !isFingerExtendedY(handLm, 8, 6) &&
+          !isFingerExtendedY(handLm, 12, 10) &&
+          !isFingerExtendedY(handLm, 16, 14) &&
+          !isFingerExtendedY(handLm, 20, 18) &&
+          !isThumbExtended(handLm, label);
+
+        let clearProgress = 0;
+        if (fourCurled) {
+          if (fistStartRef.current === null) {
+            fistStartRef.current = now;
+            clearFiredRef.current = false;
+          }
+          const elapsed = now - (fistStartRef.current ?? now);
+          clearProgress = Math.min(1, elapsed / CLEAR_HOLD_MS);
+          if (elapsed >= CLEAR_HOLD_MS && !clearFiredRef.current) {
+            clearFiredRef.current = true;
+            mode = "clear";
+            onClearHoldCompleteRef.current?.();
+          } else if (clearFiredRef.current) {
+            clearProgress = 1;
+            mode = "idle";
+          }
+        } else {
+          fistStartRef.current = null;
+          clearFiredRef.current = false;
+        }
+
         const pos = mode === "pause" || mode === "idle" || mode === "clear"
           ? null
           : toCanvasPoint(handLm, w, h, mode);
 
         const snap: HandTrackingSnapshot = {
-          gestureMode: mode, fingerPosition: pos, isTracking: true, landmarks: handLm, clearHoldProgress: 0,
+          gestureMode: mode, fingerPosition: pos, isTracking: true,
+          landmarks: handLm, clearHoldProgress: fourCurled ? clearProgress : 0,
         };
         snapshotRef.current = snap;
         updateUiIfNeeded(snap);
@@ -190,6 +230,7 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
       cameraRef.current = null;
       handsRef.current?.close();
       handsRef.current = null;
+      fistStartRef.current = null;
     };
   }, [enabled, videoElement, canvasWidth, canvasHeight, updateUiIfNeeded]);
 
