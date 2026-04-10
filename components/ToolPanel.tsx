@@ -56,7 +56,53 @@ export function ToolPanel({
       </header>
 
       <section className="space-y-4">
-        <p className="font-mono text-[10px] text-zinc-600">Controls coming soon…</p>
+        <div>
+          <label className="mb-2 block font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+            Color
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {PRESET_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => onColorChange(c)}
+                className={[
+                  "h-8 w-8 rounded-md border-2 transition-transform duration-200",
+                  color === c
+                    ? "border-[#22e3c9] scale-110 shadow-[0_0_12px_rgba(34,227,201,0.45)]"
+                    : "border-white/10 hover:border-white/25",
+                ].join(" ")}
+                style={{ backgroundColor: c }}
+                aria-label={`Color ${c}`}
+              />
+            ))}
+            <label className="flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-dashed border-white/20">
+              <span className="sr-only">Custom color</span>
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => onColorChange(e.target.value)}
+                className="h-10 w-10 cursor-pointer border-0 bg-transparent p-0"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-2 flex justify-between font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+            <label htmlFor="brush">Brush</label>
+            <span className="text-[#22e3c9]">{brushSize}px</span>
+          </div>
+          <input
+            id="brush"
+            type="range"
+            min={1}
+            max={40}
+            value={brushSize}
+            onChange={(e) => onBrushSizeChange(Number(e.target.value))}
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-[#22e3c9]"
+          />
+        </div>
       </section>
     </aside>
   );
