@@ -63,6 +63,35 @@ export function GestureCanvas() {
     lastPointRef.current = null;
   }, [size.width, size.height]);
 
+  useEffect(() => {
+    if (!videoEl) return;
+    const video = videoEl;
+    let cancelled = false;
+    let stream: MediaStream | null = null;
+
+    async function startCam() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+        video.srcObject = stream;
+        await video.play().catch(() => undefined);
+        if (!cancelled) { setCamReady(true); }
+      } catch (e) {
+        console.error("Camera error:", e);
+      }
+    }
+    startCam();
+    return () => {
+      cancelled = true;
+      setCamReady(false);
+      if (stream) { stream.getTracks().forEach((t) => t.stop()); }
+      video.srcObject = null;
+    };
+  }, [videoEl]);
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0d0d0d]">
       <canvas
