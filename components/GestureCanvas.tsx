@@ -18,6 +18,9 @@ export function GestureCanvas() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
 
+  const penDownRef = useRef(false);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+
   const bindVideo = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node;
     setVideoEl(node);
@@ -32,6 +35,33 @@ export function GestureCanvas() {
       onFrame: () => {},
       onClearHoldComplete: () => {},
     });
+
+  useEffect(() => {
+    function measure() {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(size.width * dpr);
+    canvas.height = Math.floor(size.height * dpr);
+    canvas.style.width = `${size.width}px`;
+    canvas.style.height = `${size.height}px`;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(0, 0, size.width, size.height);
+    }
+    penDownRef.current = false;
+    lastPointRef.current = null;
+  }, [size.width, size.height]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0d0d0d]">
