@@ -7,6 +7,22 @@ import { GestureBadge } from "./GestureBadge";
 import { ToolPanel } from "./ToolPanel";
 import { WebcamPreview } from "./WebcamPreview";
 
+function resolveEffectiveMode(
+  raw: GestureMode,
+  eraserToggle: boolean
+): "draw" | "erase" | "lift" {
+  if (raw === "pause" || raw === "idle" || raw === "clear") {
+    return "lift";
+  }
+  if (raw === "erase" || (eraserToggle && raw === "draw")) {
+    return "erase";
+  }
+  if (raw === "draw") {
+    return "draw";
+  }
+  return "lift";
+}
+
 export function GestureCanvas() {
   const [size, setSize] = useState({ width: 1280, height: 720 });
   const [color, setColor] = useState("#22e3c9");
@@ -18,12 +34,94 @@ export function GestureCanvas() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
 
-  const penDownRef = useRef(false);
-  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
-
   const bindVideo = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node;
     setVideoEl(node);
+  }, []);
+
+  const colorRef = useRef(color);
+  const brushRef = useRef(brushSize);
+  const eraserRef = useRef(eraserOn);
+  useEffect(() => { colorRef.current = color; }, [color]);
+  useEffect(() => { brushRef.current = brushSize; }, [brushSize]);
+  useEffect(() => { eraserRef.current = eraserOn; }, [eraserOn]);
+
+  const penDownRef = useRef(false);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+
+  const clearCanvasPixels = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  const handleClearHoldComplete = useCallback(() => {
+    clearCanvasPixels();
+    penDownRef.current = false;
+    lastPointRef.current = null;
+  }, [clearCanvasPixels]);
+
+  const paintFrame = useCallback((snap: HandTrackingSnapshot) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const effective = resolveEffectiveMode(snap.gestureMode, eraserRef.current);
+
+    if (effective === "lift") {
+      penDownRef.current = false;
+      lastPointRef.current = null;
+      return;
+    }
+
+    const pos = snap.fingerPosition;
+    if (!pos) return;
+
+    const { x, y } = pos;
+
+    if (effective === "erase") {
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-out";
+      const r = brushRef.current * 2;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
+    ctx.globalCompositeOperation = "source-over";
+    ctx.strokeStyle = colorRef.current;
+    ctx.lineWidth = brushRef.current;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (!penDownRef.current) {
+      penDownRef.current = true;
+      lastPointRef.current = { x, y };
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      return;
+    }
+
+    const last = lastPointRef.current;
+    if (!last) { lastPointRef.current = { x, y }; return; }
+
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    lastPointRef.current = { x, y };
+  }, []);
+
+  const paintRef = useRef(paintFrame);
+  paintRef.current = paintFrame;
+  const stableOnFrame = useCallback((snap: HandTrackingSnapshot) => {
+    paintRef.current(snap);
   }, []);
 
   const { gestureMode, isTracking, clearHoldProgress, snapshotRef } =
@@ -32,8 +130,8 @@ export function GestureCanvas() {
       canvasWidth: size.width,
       canvasHeight: size.height,
       enabled: camReady && !!videoEl,
-      onFrame: () => {},
-      onClearHoldComplete: () => {},
+      onFrame: stableOnFrame,
+      onClearHoldComplete: handleClearHoldComplete,
     });
 
   useEffect(() => {
@@ -92,6 +190,15 @@ export function GestureCanvas() {
     };
   }, [videoEl]);
 
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = `gesture-draw-${Date.now()}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0d0d0d]">
       <canvas
@@ -112,13 +219,21 @@ export function GestureCanvas() {
               onBrushSizeChange={setBrushSize}
               eraserOn={eraserOn}
               onEraserToggle={() => setEraserOn((v) => !v)}
-              onClearCanvas={() => {}}
-              onDownloadPng={() => {}}
+              onClearCanvas={() => {
+                clearCanvasPixels();
+                penDownRef.current = false;
+                lastPointRef.current = null;
+              }}
+              onDownloadPng={handleDownload}
               gestureMode={gestureMode}
               isTracking={isTracking}
             />
           </div>
           <div className="order-2 flex w-full flex-col items-end gap-2 sm:w-auto">
+            <p className="pointer-events-auto hidden max-w-xs text-right font-mono text-[10px] leading-relaxed text-zinc-600 sm:block">
+              Draw: index only · Erase: peace or eraser · Pause: open palm ·
+              Clear: fist 2s
+            </p>
             <WebcamPreview videoRef={bindVideo} snapshotRef={snapshotRef} />
           </div>
         </div>
