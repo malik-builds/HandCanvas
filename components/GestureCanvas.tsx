@@ -26,7 +26,7 @@ function resolveEffectiveMode(
 export function GestureCanvas() {
   const [size, setSize] = useState({ width: 1280, height: 720 });
   const [color, setColor] = useState("#22e3c9");
-  const [brushSize, setBrushSize] = useState(3);
+  const [brushSize, setBrushSize] = useState(4);
   const [eraserOn, setEraserOn] = useState(false);
   const [camReady, setCamReady] = useState(false);
 
