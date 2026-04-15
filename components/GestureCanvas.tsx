@@ -86,7 +86,7 @@ export function GestureCanvas() {
     if (effective === "erase") {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
-      const r = brushRef.current * 2;
+      const r = Math.max(10, brushRef.current * 2);
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.fill();
