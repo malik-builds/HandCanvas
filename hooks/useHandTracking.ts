@@ -146,7 +146,7 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
       hands.setOptions({
         modelComplexity: 1,
         maxNumHands: 1,
-        minDetectionConfidence: 0.9,
+        minDetectionConfidence: 0.8,
         minTrackingConfidence: 0.5,
       });
 
