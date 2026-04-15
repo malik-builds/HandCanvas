@@ -54,7 +54,7 @@ export function GestureCanvas() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.fillStyle = "#1a1a1a";
+    ctx.fillStyle = "#141414";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, []);
 
@@ -154,7 +154,7 @@ export function GestureCanvas() {
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = "#1a1a1a";
+      ctx.fillStyle = "#141414";
       ctx.fillRect(0, 0, size.width, size.height);
     }
     penDownRef.current = false;
