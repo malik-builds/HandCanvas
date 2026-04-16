@@ -203,7 +203,7 @@ export function GestureCanvas() {
     <div className="relative min-h-screen overflow-hidden bg-[#0d0d0d]">
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 block h-full w-full touch-none"
+        className="absolute inset-0 block h-full w-full touch-none ring-1 ring-inset ring-[#22e3c9]/15 shadow-[inset_0_0_120px_rgba(34,227,201,0.04)]"
         aria-label="Drawing canvas"
       />
       <div className="pointer-events-none absolute inset-0 flex min-h-0 flex-col justify-between p-4 sm:p-6">
