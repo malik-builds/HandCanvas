@@ -230,7 +230,7 @@ export function GestureCanvas() {
             />
           </div>
           <div className="order-2 flex w-full flex-col items-end gap-2 sm:w-auto">
-            <p className="pointer-events-auto hidden max-w-xs text-right font-mono text-[10px] leading-relaxed text-zinc-600 sm:block">
+            <p className="pointer-events-auto hidden max-w-xs text-right font-mono text-[10px] leading-relaxed text-zinc-500 sm:block">
               Draw: index only · Erase: peace or eraser · Pause: open palm ·
               Clear: fist 2s
             </p>
