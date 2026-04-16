@@ -204,7 +204,7 @@ export function GestureCanvas() {
       <canvas
         ref={canvasRef}
         className="absolute inset-0 block h-full w-full touch-none ring-1 ring-inset ring-[#22e3c9]/15 shadow-[inset_0_0_120px_rgba(34,227,201,0.04)]"
-        aria-label="Drawing canvas"
+        aria-label="Hand gesture drawing canvas — use index finger to draw"
       />
       <div className="pointer-events-none absolute inset-0 flex min-h-0 flex-col justify-between p-4 sm:p-6">
         <div className="flex shrink-0 justify-end">
