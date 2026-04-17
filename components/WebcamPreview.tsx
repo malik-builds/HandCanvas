@@ -80,7 +80,7 @@ export function WebcamPreview({ videoRef, snapshotRef }: WebcamPreviewProps) {
   return (
     <div
       className={[
-        "pointer-events-none overflow-hidden rounded-xl border border-[#22e3c9]/25",
+        "pointer-events-none overflow-hidden rounded-xl border border-[#22e3c9]/20",
         "bg-black/60 shadow-[0_0_32px_rgba(34,227,201,0.15)]",
       ].join(" ")}
     >
