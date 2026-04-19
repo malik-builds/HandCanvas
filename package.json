@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "docker:up": "docker compose up --build --force-recreate",
-    "docker:build": "docker compose build"
+    "docker:build": "docker compose build",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
     "next": "15.5.15",
