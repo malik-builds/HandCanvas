@@ -1,0 +1,13 @@
+# Production-style image: code is baked in at `docker compose build` time.
+# After editing source, run: docker compose up --build
+# (plain `docker compose up` reuses the old image — changes won't show.)
+
+version: "3.8"
+
+services:
+  gesture-draw:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
