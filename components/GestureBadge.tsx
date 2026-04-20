@@ -51,7 +51,7 @@ export function GestureBadge({ mode, clearHoldProgress }: GestureBadgeProps) {
         key={mode}
         className={[
           "flex items-center gap-2 rounded-lg border border-white/10 px-3 py-1.5",
-          "bg-black/40 backdrop-blur-md shadow-[0_0_24px_rgba(34,227,201,0.12)]",
+          "bg-black/40 backdrop-blur-md shadow-[0_0_24px_rgba(34,227,201,0.10)]",
           "animate-[badge-pop_0.35s_ease-out]",
           meta.accent,
         ].join(" ")}
