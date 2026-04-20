@@ -47,7 +47,7 @@ export function ToolPanel({
       ].join(" ")}
     >
       <header className="mb-4 border-b border-white/10 pb-3">
-        <h1 className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+        <h1 className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-400">
           Gesture Draw
         </h1>
         <p className="mt-1 font-mono text-[10px] leading-relaxed text-zinc-500">
