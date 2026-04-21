@@ -42,7 +42,7 @@ export function ToolPanel({
     <aside
       className={[
         "pointer-events-auto w-[min(100vw-2rem,280px)] rounded-xl border border-white/[0.08]",
-        "bg-[#0a0a0a]/75 p-4 shadow-[0_8px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl",
+        "bg-[#0a0a0a]/75 p-4 shadow-[0_8px_40px_rgba(0,0,0,0.60)] backdrop-blur-xl",
         "transition-all duration-300",
       ].join(" ")}
     >
