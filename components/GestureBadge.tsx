@@ -66,7 +66,7 @@ export function GestureBadge({ mode, clearHoldProgress }: GestureBadgeProps) {
       {isHoldingClear && (
         <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[#22e3c9] to-[#4ade80] transition-[width] duration-100"
+            className="h-full rounded-full bg-gradient-to-r from-[#22e3c9] to-[#4ade80] transition-[width] duration-75"
             style={{ width: `${clearHoldProgress * 100}%` }}
           />
         </div>
