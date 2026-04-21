@@ -12,7 +12,7 @@ const MEDIAPIPE_HANDS_VER = "0.4.1675469240";
 const MEDIAPIPE_CAMERA_VER = "0.3.1675466862";
 const MEDIAPIPE_DRAWING_VER = "0.3.1675466124";
 
-const CLEAR_HOLD_MS = 2000;
+const CLEAR_HOLD_MS = 2000; // ms of fist hold before canvas wipe fires
 
 const CDN_SCRIPTS = [
   `https://cdn.jsdelivr.net/npm/@mediapipe/hands@${MEDIAPIPE_HANDS_VER}/hands.js`,
