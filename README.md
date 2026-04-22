@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HandCanvas
 
-## Getting Started
+Draw on a full-screen canvas using only your hand — no mouse, no touch, no stylus. HandCanvas uses your webcam and [MediaPipe Hands](https://google.github.io/mediapipe/solutions/hands.html) to classify hand gestures in real time and route them into a drawing engine built on HTML5 Canvas. The frontend is [Next.js 15](https://nextjs.org/) with TypeScript and Tailwind CSS v4.
 
-First, run the development server:
+## Gesture Reference
+
+| Gesture | Action |
+|---------|--------|
+| ☝️ **Index finger only** | Draw — traces your fingertip on the canvas |
+| ✌️ **Peace sign** (index + middle) | Erase — circular eraser at the fingertip midpoint |
+| 🖐 **Open palm** (all fingers out) | Pause — lifts the pen without ending the session |
+| ✊ **Closed fist** held 2 s | Clear — wipes the entire canvas; a progress bar shows the hold |
+
+> You can also toggle the **Eraser** and **Clear** via the tool panel on the left.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | TypeScript 5 |
+| Framework | Next.js 15 (App Router) |
+| UI library | React 19 |
+| Styling | Tailwind CSS v4 (CSS-first) |
+| Hand tracking | MediaPipe Hands 0.4 (CDN) |
+| Rendering | HTML5 Canvas (DPR-aware) |
+| Font | JetBrains Mono |
+| Container | Docker + docker-compose |
+
+## Run Locally
+
+Requires **Node.js 20+** and a webcam. Allow camera access when the browser prompts.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run with Docker
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The image builds a production bundle — edits on disk don't appear until you rebuild.
 
-## Learn More
+```bash
+docker compose up --build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Then open [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+For day-to-day work, `npm run dev` is faster. Use Docker to verify the production build.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+app/
+  layout.tsx          # Root layout — JetBrains Mono, dark bg, metadata
+  page.tsx            # Single route: renders <GestureCanvas />
+  globals.css         # Tailwind v4 import + CSS variables + badge-pop keyframe
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+components/
+  GestureCanvas.tsx   # Root smart component — camera, drawing, orchestration
+  ToolPanel.tsx       # Left-side UI panel (colors, brush, eraser, save)
+  GestureBadge.tsx    # Top-right gesture mode badge + clear-hold progress bar
+  WebcamPreview.tsx   # Webcam feed + MediaPipe skeleton overlay (rAF loop)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+hooks/
+  useHandTracking.ts  # Loads MediaPipe from CDN, classifies gestures, fires onFrame
+
+types/
+  gestures.ts         # GestureMode, HandLandmark, Point2D, HandTrackingSnapshot
+  mediapipe-globals.d.ts  # window.Hands / window.Camera / window.drawConnectors types
+```
+
+## How It Works
+
+1. **MediaPipe Hands** is loaded from the jsDelivr CDN at runtime (no npm install, no SSR issues).
+2. A `Camera` instance feeds webcam frames into `Hands`, which returns 21 normalized landmarks per detected hand.
+3. `useHandTracking` classifies each frame into a `GestureMode` using tip-vs-PIP-joint comparisons and fires `onFrame` with a snapshot.
+4. `GestureCanvas` receives the snapshot and paints strokes (or erases) on the main canvas using the `source-over` / `destination-out` composite operations.
+5. A mirrored coordinate transform maps the webcam's flipped X axis back to screen space.
+
+## Notes
+
+- Runs entirely in the browser — no server, no database, no API keys.
+- Requires `getUserMedia` — HTTPS or `localhost` only.
+- Tested on Chrome and Firefox (desktop). Safari support depends on webcam permissions.
