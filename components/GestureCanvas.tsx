@@ -163,6 +163,10 @@ export function GestureCanvas() {
     let raf = 0;
     let cancelled = false;
     const lastPos = { x: 0, y: 0, valid: false };
+    // Local EMA for the cursor — keeps the visual cursor smooth independently
+    // of the drawing EMA so the dot doesn't jitter when the finger is still.
+    let cursorSmoothed: { x: number; y: number } | null = null;
+    const CURSOR_ALPHA = 0.3;
 
     const drawCursor = () => {
       if (cancelled) return;
@@ -178,14 +182,24 @@ export function GestureCanvas() {
 
       const snap = snapshotRef.current;
       const effective = resolveEffectiveMode(snap.gestureMode, eraserRef.current);
-      const pos = snap.fingerPosition;
+      const rawPos = snap.fingerPosition;
+      const isPaused = snap.gestureMode === "pause";
 
+      // Apply EMA to the raw cursor position
+      if (rawPos) {
+        cursorSmoothed = cursorSmoothed
+          ? { x: cursorSmoothed.x + CURSOR_ALPHA * (rawPos.x - cursorSmoothed.x),
+              y: cursorSmoothed.y + CURSOR_ALPHA * (rawPos.y - cursorSmoothed.y) }
+          : { x: rawPos.x, y: rawPos.y };
+      }
+
+      const pos = cursorSmoothed;
       if (pos) { lastPos.x = pos.x; lastPos.y = pos.y; lastPos.valid = true; }
 
       // Contrast color flips with the background so the cursor is always visible
       const contrastColor = canvasBgRef.current === "#ffffff" ? "#000000" : "#ffffff";
 
-      if (effective === "draw" && pos) {
+      if (effective === "draw" && pos && !isPaused) {
         // Filled dot in current brush color + faint outer ring
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
@@ -199,13 +213,22 @@ export function GestureCanvas() {
         ctx.globalAlpha = 0.4;
         ctx.stroke();
         ctx.globalAlpha = 1;
-      } else if (effective === "erase" && pos) {
+      } else if (effective === "erase" && pos && !isPaused) {
         // Hollow circle matching the exact eraser footprint
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, eraserSizeRef.current, 0, Math.PI * 2);
         ctx.strokeStyle = contrastColor;
         ctx.lineWidth = 1.5;
         ctx.globalAlpha = 0.7;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else if (isPaused && pos) {
+        // Dim cursor while paused — shows position without implying drawing
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 6, 0, Math.PI * 2);
+        ctx.strokeStyle = contrastColor;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.35;
         ctx.stroke();
         ctx.globalAlpha = 1;
       } else if (lastPos.valid) {
