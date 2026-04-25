@@ -60,6 +60,9 @@ export function GestureCanvas() {
 
   // EMA smoothing factor — lower = smoother but laggier, higher = more responsive
   const SMOOTH_ALPHA = 0.35;
+  // Minimum pixel distance before a new stroke segment is committed.
+  // Prevents micro-jitter from producing tiny jagged segments when still.
+  const JITTER_THRESHOLD = 2;
 
   const clearCanvasPixels = useCallback(() => {
     const canvas = canvasRef.current;
@@ -126,6 +129,12 @@ export function GestureCanvas() {
 
     const last = lastPointRef.current;
     if (!last) { lastPointRef.current = { x: sx, y: sy }; return; }
+
+    // Dead zone: skip this frame if the finger hasn't moved enough.
+    // Prevents jitter micro-segments when the hand is physically still.
+    const dx = sx - last.x;
+    const dy = sy - last.y;
+    if (dx * dx + dy * dy < JITTER_THRESHOLD * JITTER_THRESHOLD) return;
 
     // Correct midpoint bezier: draw from prevMid → curMid using lastPoint as
     // the control point. Consecutive segments share endpoints (the midpoints)
