@@ -33,6 +33,7 @@ export function GestureCanvas() {
   const [camReady, setCamReady] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cursorCanvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
 
@@ -205,6 +206,11 @@ export function GestureCanvas() {
         ref={canvasRef}
         className="absolute inset-0 block h-full w-full touch-none ring-1 ring-inset ring-[#22e3c9]/15 shadow-[inset_0_0_120px_rgba(34,227,201,0.04)]"
         aria-label="Drawing canvas"
+      />
+      <canvas
+        ref={cursorCanvasRef}
+        className="pointer-events-none absolute inset-0 block h-full w-full touch-none"
+        aria-hidden
       />
       <div className="pointer-events-none absolute inset-0 flex min-h-0 flex-col justify-between p-4 sm:p-6">
         <div className="flex shrink-0 justify-end">
