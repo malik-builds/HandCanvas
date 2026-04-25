@@ -158,6 +158,17 @@ export function GestureCanvas() {
       ctx.fillStyle = CANVAS_BG;
       ctx.fillRect(0, 0, size.width, size.height);
     }
+
+    const cursor = cursorCanvasRef.current;
+    if (cursor) {
+      cursor.width = Math.floor(size.width * dpr);
+      cursor.height = Math.floor(size.height * dpr);
+      cursor.style.width = `${size.width}px`;
+      cursor.style.height = `${size.height}px`;
+      const cctx = cursor.getContext("2d");
+      if (cctx) cctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
     penDownRef.current = false;
     lastPointRef.current = null;
   }, [size.width, size.height]);
