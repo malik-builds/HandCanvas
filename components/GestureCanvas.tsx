@@ -7,8 +7,6 @@ import { GestureBadge } from "./GestureBadge";
 import { ToolPanel } from "./ToolPanel";
 import { WebcamPreview } from "./WebcamPreview";
 
-const CANVAS_BG = "#000000";
-
 function resolveEffectiveMode(
   raw: GestureMode,
   eraserToggle: boolean
@@ -30,6 +28,7 @@ export function GestureCanvas() {
   const [color, setColor] = useState("#22e3c9");
   const [brushSize, setBrushSize] = useState(4);
   const [eraserOn, setEraserOn] = useState(false);
+  const [canvasBg, setCanvasBg] = useState<"#000000" | "#ffffff">("#000000");
   const [camReady, setCamReady] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -45,9 +44,11 @@ export function GestureCanvas() {
   const colorRef = useRef(color);
   const brushRef = useRef(brushSize);
   const eraserRef = useRef(eraserOn);
+  const canvasBgRef = useRef(canvasBg);
   useEffect(() => { colorRef.current = color; }, [color]);
   useEffect(() => { brushRef.current = brushSize; }, [brushSize]);
   useEffect(() => { eraserRef.current = eraserOn; }, [eraserOn]);
+  useEffect(() => { canvasBgRef.current = canvasBg; }, [canvasBg]);
 
   const penDownRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
@@ -57,7 +58,7 @@ export function GestureCanvas() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.fillStyle = CANVAS_BG;
+    ctx.fillStyle = canvasBgRef.current;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, []);
 
@@ -90,7 +91,7 @@ export function GestureCanvas() {
       const r = Math.max(10, brushRef.current * 2);
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = CANVAS_BG;
+      ctx.fillStyle = canvasBgRef.current;
       ctx.fill();
       return;
     }
@@ -220,7 +221,7 @@ export function GestureCanvas() {
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = CANVAS_BG;
+      ctx.fillStyle = canvasBgRef.current;
       ctx.fillRect(0, 0, size.width, size.height);
     }
 
