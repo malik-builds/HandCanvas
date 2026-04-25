@@ -28,6 +28,7 @@ export function GestureCanvas() {
   const [color, setColor] = useState("#22e3c9");
   const [brushSize, setBrushSize] = useState(4);
   const [eraserOn, setEraserOn] = useState(false);
+  const [eraserSize, setEraserSize] = useState(20);
   const [canvasBg, setCanvasBg] = useState<"#000000" | "#ffffff">("#000000");
   const [camReady, setCamReady] = useState(false);
 
@@ -44,10 +45,12 @@ export function GestureCanvas() {
   const colorRef = useRef(color);
   const brushRef = useRef(brushSize);
   const eraserRef = useRef(eraserOn);
+  const eraserSizeRef = useRef(eraserSize);
   const canvasBgRef = useRef(canvasBg);
   useEffect(() => { colorRef.current = color; }, [color]);
   useEffect(() => { brushRef.current = brushSize; }, [brushSize]);
   useEffect(() => { eraserRef.current = eraserOn; }, [eraserOn]);
+  useEffect(() => { eraserSizeRef.current = eraserSize; }, [eraserSize]);
   useEffect(() => { canvasBgRef.current = canvasBg; }, [canvasBg]);
 
   const penDownRef = useRef(false);
