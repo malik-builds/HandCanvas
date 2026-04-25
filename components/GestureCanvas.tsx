@@ -323,13 +323,15 @@ export function GestureCanvas() {
                 lastPointRef.current = null;
               }}
               onDownloadPng={handleDownload}
+              canvasBg={canvasBg}
+              onBgToggle={() => setCanvasBg((bg) => bg === "#000000" ? "#ffffff" : "#000000")}
               gestureMode={gestureMode}
               isTracking={isTracking}
             />
           </div>
           <div className="order-2 flex w-full flex-col items-end gap-2 sm:w-auto">
             <p className="pointer-events-auto hidden max-w-xs text-right font-mono text-[10px] leading-relaxed text-zinc-600 sm:block">
-              Draw: index only · Erase: peace or eraser · Pause: open palm ·
+              Draw: index only · Erase: peace or eraser · Pause: left hand or open palm ·
               Clear: fist 2s
             </p>
             <WebcamPreview videoRef={bindVideo} snapshotRef={snapshotRef} />

@@ -22,6 +22,8 @@ interface ToolPanelProps {
   onEraserToggle: () => void;
   onClearCanvas: () => void;
   onDownloadPng: () => void;
+  canvasBg: "#000000" | "#ffffff";
+  onBgToggle: () => void;
   gestureMode: GestureMode;
   isTracking: boolean;
 }
@@ -35,6 +37,8 @@ export function ToolPanel({
   onEraserToggle,
   onClearCanvas,
   onDownloadPng,
+  canvasBg,
+  onBgToggle,
   gestureMode,
   isTracking,
 }: ToolPanelProps) {
@@ -124,6 +128,34 @@ export function ToolPanel({
           >
             Clear
           </button>
+        </div>
+
+        <div>
+          <label className="mb-2 block font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+            Canvas
+          </label>
+          <div className="flex gap-2">
+            {([["#000000", "Black"], ["#ffffff", "White"]] as const).map(([bg, label]) => (
+              <button
+                key={bg}
+                type="button"
+                onClick={onBgToggle}
+                className={[
+                  "flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-xs transition-all duration-200",
+                  canvasBg === bg
+                    ? "border-[#22e3c9] bg-[#22e3c9]/10 text-[#22e3c9]"
+                    : "border-white/10 bg-white/5 text-zinc-400 hover:border-white/20",
+                ].join(" ")}
+                aria-pressed={canvasBg === bg}
+              >
+                <span
+                  className="inline-block h-3 w-3 rounded-sm border border-white/20"
+                  style={{ backgroundColor: bg }}
+                />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <button
