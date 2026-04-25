@@ -160,6 +160,9 @@ export function GestureCanvas() {
 
       if (pos) { lastPos.x = pos.x; lastPos.y = pos.y; lastPos.valid = true; }
 
+      // Contrast color flips with the background so the cursor is always visible
+      const contrastColor = canvasBgRef.current === "#ffffff" ? "#000000" : "#ffffff";
+
       if (effective === "draw" && pos) {
         // Filled dot in current brush color + faint outer ring
         ctx.beginPath();
@@ -179,7 +182,7 @@ export function GestureCanvas() {
         const r = Math.max(10, brushRef.current * 2);
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
-        ctx.strokeStyle = "#ffffff";
+        ctx.strokeStyle = contrastColor;
         ctx.lineWidth = 1.5;
         ctx.globalAlpha = 0.7;
         ctx.stroke();
@@ -188,7 +191,7 @@ export function GestureCanvas() {
         // Ghost dot at last known position so you know where you left off
         ctx.beginPath();
         ctx.arc(lastPos.x, lastPos.y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = contrastColor;
         ctx.globalAlpha = 0.2;
         ctx.fill();
         ctx.globalAlpha = 1;
