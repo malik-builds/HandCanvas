@@ -52,6 +52,7 @@ export function GestureCanvas() {
 
   const penDownRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const lastMidRef = useRef<{ x: number; y: number } | null>(null);
   const smoothedPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // EMA smoothing factor — lower = smoother but laggier, higher = more responsive
@@ -70,6 +71,7 @@ export function GestureCanvas() {
     clearCanvasPixels();
     penDownRef.current = false;
     lastPointRef.current = null;
+    lastMidRef.current = null;
     smoothedPosRef.current = null;
   }, [clearCanvasPixels]);
 
@@ -84,6 +86,7 @@ export function GestureCanvas() {
     if (effective === "lift") {
       penDownRef.current = false;
       lastPointRef.current = null;
+      lastMidRef.current = null;
       smoothedPosRef.current = null;
       return;
     }
@@ -115,22 +118,26 @@ export function GestureCanvas() {
     if (!penDownRef.current) {
       penDownRef.current = true;
       lastPointRef.current = { x: sx, y: sy };
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
+      lastMidRef.current = { x: sx, y: sy };
       return;
     }
 
     const last = lastPointRef.current;
     if (!last) { lastPointRef.current = { x: sx, y: sy }; return; }
 
-    // Quadratic bezier through midpoints — produces smooth, continuous curves
-    const midX = (last.x + sx) / 2;
-    const midY = (last.y + sy) / 2;
+    // Correct midpoint bezier: draw from prevMid → curMid using lastPoint as
+    // the control point. Consecutive segments share endpoints (the midpoints)
+    // so the path is continuous and genuinely curved — no more segmented look.
+    const curMid = { x: (last.x + sx) / 2, y: (last.y + sy) / 2 };
+    const prevMid = lastMidRef.current ?? last;
+
     ctx.beginPath();
-    ctx.moveTo(last.x, last.y);
-    ctx.quadraticCurveTo(last.x, last.y, midX, midY);
+    ctx.moveTo(prevMid.x, prevMid.y);
+    ctx.quadraticCurveTo(last.x, last.y, curMid.x, curMid.y);
     ctx.stroke();
+
     lastPointRef.current = { x: sx, y: sy };
+    lastMidRef.current = curMid;
   }, []);
 
   const paintRef = useRef(paintFrame);
