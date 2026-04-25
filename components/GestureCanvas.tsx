@@ -135,6 +135,71 @@ export function GestureCanvas() {
       onClearHoldComplete: handleClearHoldComplete,
     });
 
+  // Cursor overlay rAF loop — reads snapshotRef every frame, never causes re-renders
+  useEffect(() => {
+    let raf = 0;
+    let cancelled = false;
+    const lastPos = { x: 0, y: 0, valid: false };
+
+    const drawCursor = () => {
+      if (cancelled) return;
+      const canvas = cursorCanvasRef.current;
+      if (!canvas) { raf = requestAnimationFrame(drawCursor); return; }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { raf = requestAnimationFrame(drawCursor); return; }
+
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+      ctx.clearRect(0, 0, w, h);
+
+      const snap = snapshotRef.current;
+      const effective = resolveEffectiveMode(snap.gestureMode, eraserRef.current);
+      const pos = snap.fingerPosition;
+
+      if (pos) { lastPos.x = pos.x; lastPos.y = pos.y; lastPos.valid = true; }
+
+      if (effective === "draw" && pos) {
+        // Filled dot in current brush color + faint outer ring
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = colorRef.current;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 9, 0, Math.PI * 2);
+        ctx.strokeStyle = colorRef.current;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.4;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else if (effective === "erase" && pos) {
+        // Hollow circle matching the exact eraser footprint
+        const r = Math.max(10, brushRef.current * 2);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.7;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else if (lastPos.valid) {
+        // Ghost dot at last known position so you know where you left off
+        ctx.beginPath();
+        ctx.arc(lastPos.x, lastPos.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.globalAlpha = 0.2;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      raf = requestAnimationFrame(drawCursor);
+    };
+
+    raf = requestAnimationFrame(drawCursor);
+    return () => { cancelled = true; cancelAnimationFrame(raf); };
+  }, [snapshotRef]);
+
   useEffect(() => {
     function measure() {
       setSize({ width: window.innerWidth, height: window.innerHeight });
