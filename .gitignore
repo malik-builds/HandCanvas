@@ -43,5 +43,5 @@ next-env.d.ts
 # internal dev docs (line-by-line walkthroughs, not for public repo)
 docs/
 
-# claude code project files
+# local editor config
 CLAUDE.md

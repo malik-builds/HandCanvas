@@ -7,6 +7,8 @@ import { GestureBadge } from "./GestureBadge";
 import { ToolPanel } from "./ToolPanel";
 import { WebcamPreview } from "./WebcamPreview";
 
+const CANVAS_BG = "#000000";
+
 function resolveEffectiveMode(
   raw: GestureMode,
   eraserToggle: boolean
@@ -54,7 +56,7 @@ export function GestureCanvas() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.fillStyle = "#141414";
+    ctx.fillStyle = CANVAS_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, []);
 
@@ -84,13 +86,11 @@ export function GestureCanvas() {
     const { x, y } = pos;
 
     if (effective === "erase") {
-      ctx.save();
-      ctx.globalCompositeOperation = "destination-out";
       const r = Math.max(10, brushRef.current * 2);
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = CANVAS_BG;
       ctx.fill();
-      ctx.restore();
       return;
     }
 
@@ -154,7 +154,7 @@ export function GestureCanvas() {
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = "#141414";
+      ctx.fillStyle = CANVAS_BG;
       ctx.fillRect(0, 0, size.width, size.height);
     }
     penDownRef.current = false;
