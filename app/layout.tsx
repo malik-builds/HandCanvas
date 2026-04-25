@@ -9,7 +9,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gesture Draw",
+  title: "HandCanvas",
   description:
     "Draw on a canvas with hand gestures — MediaPipe Hands and Next.js",
 };
