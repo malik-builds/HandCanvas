@@ -48,14 +48,15 @@ function classifyGesture(lm: HandLandmark[], handedLabel: string): GestureMode {
   const ring = isFingerExtendedY(lm, 16, 14);
   const pinky = isFingerExtendedY(lm, 20, 18);
   const thumb = isThumbExtended(lm, handedLabel);
-  const fourOpen = index && middle && ring && pinky;
   const peace = index && middle && !ring && !pinky;
-  if (fourOpen && thumb) { return "pause"; }
+  // Pause is NEVER returned here — it is exclusively triggered by left-hand detection.
+  // Any ambiguous pose falls back to "idle" so drawing simply stops rather than
+  // incorrectly switching to pause.
   if (peace) { return "erase"; }
   const fist = !index && !middle && !ring && !pinky && !thumb;
   if (fist) { return "idle"; }
   if (index && !middle) { return "draw"; }
-  return "pause";
+  return "idle";
 }
 
 function mirrorX(x: number, width: number): number {
