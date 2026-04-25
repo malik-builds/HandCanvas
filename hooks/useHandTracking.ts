@@ -189,7 +189,12 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
           }
         }
 
-        // Left hand visible → pause drawing regardless of right hand state
+        // Use right hand for drawing (fall back to first hand if no explicit right)
+        const handLm = rightLm ?? (allLandmarks[0] as HandLandmark[]);
+        const label = rightLm ? rightLabel : (allHandedness?.[0]?.label ?? "Right");
+
+        // Left hand → force pause, but still compute right-hand canvas position so
+        // the cursor remains visible and the user can see where they'll draw next.
         if (leftDetected && !rightLm) {
           fistStartRef.current = null;
           clearFiredRef.current = false;
@@ -203,11 +208,6 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
           return;
         }
 
-        // Use right hand for drawing (fall back to first hand if no explicit right)
-        const handLm = rightLm ?? (allLandmarks[0] as HandLandmark[]);
-        const label = rightLm ? rightLabel : (allHandedness?.[0]?.label ?? "Right");
-
-        // If left hand is also present, override mode to pause after resolving position
         let mode = classifyGesture(handLm, label);
         if (leftDetected) { mode = "pause"; }
 
@@ -240,9 +240,12 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
           clearFiredRef.current = false;
         }
 
-        const pos = mode === "pause" || mode === "idle" || mode === "clear"
+        // Always compute right-hand canvas position — even when paused — so the
+        // cursor overlay can show where the right hand is without drawing strokes.
+        const drawMode = mode === "idle" || mode === "clear" ? null : mode;
+        const pos = drawMode === null
           ? null
-          : toCanvasPoint(handLm, w, h, mode);
+          : toCanvasPoint(handLm, w, h, drawMode === "pause" ? "draw" : drawMode);
 
         const snap: HandTrackingSnapshot = {
           gestureMode: mode, fingerPosition: pos, isTracking: true,
