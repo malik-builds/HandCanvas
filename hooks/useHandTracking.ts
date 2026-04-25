@@ -153,10 +153,10 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
       hands.onResults((results) => {
         if (cancelled) return;
         const w = canvasWidth; const h = canvasHeight;
-        const handLm = results.multiHandLandmarks?.[0] as HandLandmark[] | undefined;
-        const label = results.multiHandedness?.[0]?.label === "Left" ? "Left" : "Right";
+        const allLandmarks = results.multiHandLandmarks as HandLandmark[][] | undefined;
+        const allHandedness = results.multiHandedness as Array<{ label: string }> | undefined;
 
-        if (!handLm) {
+        if (!allLandmarks || allLandmarks.length === 0) {
           fistStartRef.current = null;
           clearFiredRef.current = false;
           const snap: HandTrackingSnapshot = {
@@ -168,10 +168,47 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
           return;
         }
 
+        // Separate left and right hands — MediaPipe reports actual handedness
+        // (accounts for selfie-camera mirroring), so "Left" = user's left hand.
+        // Left hand = dedicated pause; right hand = draw/erase/clear.
+        let rightLm: HandLandmark[] | null = null;
+        let rightLabel = "Right";
+        let leftDetected = false;
+
+        for (let i = 0; i < allLandmarks.length; i++) {
+          const label = allHandedness?.[i]?.label ?? "Right";
+          if (label === "Left") {
+            leftDetected = true;
+          } else {
+            rightLm = allLandmarks[i];
+            rightLabel = label;
+          }
+        }
+
+        // Left hand visible → pause drawing regardless of right hand state
+        if (leftDetected && !rightLm) {
+          fistStartRef.current = null;
+          clearFiredRef.current = false;
+          const snap: HandTrackingSnapshot = {
+            gestureMode: "pause", fingerPosition: null, isTracking: true,
+            landmarks: allLandmarks[0], clearHoldProgress: 0,
+          };
+          snapshotRef.current = snap;
+          updateUiIfNeeded(snap);
+          onFrameRef.current?.(snap);
+          return;
+        }
+
+        // Use right hand for drawing (fall back to first hand if no explicit right)
+        const handLm = rightLm ?? (allLandmarks[0] as HandLandmark[]);
+        const label = rightLm ? rightLabel : (allHandedness?.[0]?.label ?? "Right");
+
+        // If left hand is also present, override mode to pause after resolving position
         let mode = classifyGesture(handLm, label);
+        if (leftDetected) { mode = "pause"; }
 
         const now = performance.now();
-        const fourCurled =
+        const fourCurled = !leftDetected &&
           !isFingerExtendedY(handLm, 8, 6) &&
           !isFingerExtendedY(handLm, 12, 10) &&
           !isFingerExtendedY(handLm, 16, 14) &&
