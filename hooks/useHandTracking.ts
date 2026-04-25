@@ -168,18 +168,21 @@ export function useHandTracking(options: UseHandTrackingOptions): UseHandTrackin
           return;
         }
 
-        // Separate left and right hands — MediaPipe reports actual handedness
-        // (accounts for selfie-camera mirroring), so "Left" = user's left hand.
-        // Left hand = dedicated pause; right hand = draw/erase/clear.
+        // Separate left and right hands.
+        // Raw (un-mirrored) frames are sent to MediaPipe, so for a front-facing
+        // camera the user's LEFT hand sits on the RIGHT of the raw image and
+        // MediaPipe labels it "Right". Swap accordingly:
+        //   MediaPipe "Right" = user's left hand  → pause
+        //   MediaPipe "Left"  = user's right hand → draw/erase/clear
         let rightLm: HandLandmark[] | null = null;
-        let rightLabel = "Right";
+        let rightLabel = "Left";
         let leftDetected = false;
 
         for (let i = 0; i < allLandmarks.length; i++) {
-          const label = allHandedness?.[i]?.label ?? "Right";
-          if (label === "Left") {
+          const label = allHandedness?.[i]?.label ?? "Left";
+          if (label === "Right") {   // MediaPipe "Right" = user's LEFT hand
             leftDetected = true;
-          } else {
+          } else {                   // MediaPipe "Left"  = user's RIGHT hand
             rightLm = allLandmarks[i];
             rightLabel = label;
           }
