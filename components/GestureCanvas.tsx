@@ -338,6 +338,8 @@ export function GestureCanvas() {
               onBrushSizeChange={setBrushSize}
               eraserOn={eraserOn}
               onEraserToggle={() => setEraserOn((v) => !v)}
+              eraserSize={eraserSize}
+              onEraserSizeChange={setEraserSize}
               onClearCanvas={() => {
                 clearCanvasPixels();
                 penDownRef.current = false;

@@ -20,6 +20,8 @@ interface ToolPanelProps {
   onBrushSizeChange: (n: number) => void;
   eraserOn: boolean;
   onEraserToggle: () => void;
+  eraserSize: number;
+  onEraserSizeChange: (n: number) => void;
   onClearCanvas: () => void;
   onDownloadPng: () => void;
   canvasBg: "#000000" | "#ffffff";
@@ -35,6 +37,8 @@ export function ToolPanel({
   onBrushSizeChange,
   eraserOn,
   onEraserToggle,
+  eraserSize,
+  onEraserSizeChange,
   onClearCanvas,
   onDownloadPng,
   canvasBg,
@@ -105,6 +109,22 @@ export function ToolPanel({
             value={brushSize}
             onChange={(e) => onBrushSizeChange(Number(e.target.value))}
             className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-[#22e3c9]"
+          />
+        </div>
+
+        <div>
+          <div className="mb-2 flex justify-between font-mono text-[10px] uppercase tracking-wider text-zinc-500">
+            <label htmlFor="eraser-size">Eraser</label>
+            <span className="text-[#a78bfa]">{eraserSize}px</span>
+          </div>
+          <input
+            id="eraser-size"
+            type="range"
+            min={5}
+            max={60}
+            value={eraserSize}
+            onChange={(e) => onEraserSizeChange(Number(e.target.value))}
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-[#a78bfa]"
           />
         </div>
 
