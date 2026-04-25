@@ -202,6 +202,18 @@ export function GestureCanvas() {
   }, [snapshotRef]);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    ctx.fillStyle = canvasBg;
+    ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+    penDownRef.current = false;
+    lastPointRef.current = null;
+  }, [canvasBg]);
+
+  useEffect(() => {
     function measure() {
       setSize({ width: window.innerWidth, height: window.innerHeight });
     }
