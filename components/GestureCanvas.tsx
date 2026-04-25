@@ -104,9 +104,8 @@ export function GestureCanvas() {
     smoothedPosRef.current = { x: sx, y: sy };
 
     if (effective === "erase") {
-      const r = Math.max(10, brushRef.current * 2);
       ctx.beginPath();
-      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.arc(sx, sy, eraserSizeRef.current, 0, Math.PI * 2);
       ctx.fillStyle = canvasBgRef.current;
       ctx.fill();
       return;
@@ -202,9 +201,8 @@ export function GestureCanvas() {
         ctx.globalAlpha = 1;
       } else if (effective === "erase" && pos) {
         // Hollow circle matching the exact eraser footprint
-        const r = Math.max(10, brushRef.current * 2);
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, eraserSizeRef.current, 0, Math.PI * 2);
         ctx.strokeStyle = contrastColor;
         ctx.lineWidth = 1.5;
         ctx.globalAlpha = 0.7;
