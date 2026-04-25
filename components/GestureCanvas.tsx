@@ -52,6 +52,10 @@ export function GestureCanvas() {
 
   const penDownRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const smoothedPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  // EMA smoothing factor — lower = smoother but laggier, higher = more responsive
+  const SMOOTH_ALPHA = 0.35;
 
   const clearCanvasPixels = useCallback(() => {
     const canvas = canvasRef.current;
@@ -66,6 +70,7 @@ export function GestureCanvas() {
     clearCanvasPixels();
     penDownRef.current = false;
     lastPointRef.current = null;
+    smoothedPosRef.current = null;
   }, [clearCanvasPixels]);
 
   const paintFrame = useCallback((snap: HandTrackingSnapshot) => {
@@ -79,18 +84,23 @@ export function GestureCanvas() {
     if (effective === "lift") {
       penDownRef.current = false;
       lastPointRef.current = null;
+      smoothedPosRef.current = null;
       return;
     }
 
     const pos = snap.fingerPosition;
     if (!pos) return;
 
-    const { x, y } = pos;
+    // EMA smoothing — reduces per-frame jitter before drawing
+    const prev = smoothedPosRef.current;
+    const sx = prev ? prev.x + SMOOTH_ALPHA * (pos.x - prev.x) : pos.x;
+    const sy = prev ? prev.y + SMOOTH_ALPHA * (pos.y - prev.y) : pos.y;
+    smoothedPosRef.current = { x: sx, y: sy };
 
     if (effective === "erase") {
       const r = Math.max(10, brushRef.current * 2);
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
       ctx.fillStyle = canvasBgRef.current;
       ctx.fill();
       return;
@@ -104,20 +114,23 @@ export function GestureCanvas() {
 
     if (!penDownRef.current) {
       penDownRef.current = true;
-      lastPointRef.current = { x, y };
+      lastPointRef.current = { x: sx, y: sy };
       ctx.beginPath();
-      ctx.moveTo(x, y);
+      ctx.moveTo(sx, sy);
       return;
     }
 
     const last = lastPointRef.current;
-    if (!last) { lastPointRef.current = { x, y }; return; }
+    if (!last) { lastPointRef.current = { x: sx, y: sy }; return; }
 
+    // Quadratic bezier through midpoints — produces smooth, continuous curves
+    const midX = (last.x + sx) / 2;
+    const midY = (last.y + sy) / 2;
     ctx.beginPath();
     ctx.moveTo(last.x, last.y);
-    ctx.lineTo(x, y);
+    ctx.quadraticCurveTo(last.x, last.y, midX, midY);
     ctx.stroke();
-    lastPointRef.current = { x, y };
+    lastPointRef.current = { x: sx, y: sy };
   }, []);
 
   const paintRef = useRef(paintFrame);
