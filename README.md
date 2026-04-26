@@ -111,7 +111,7 @@ types/
 
 ---
 
-## Notes
+## Additional:
 
 - Runs entirely in the browser — no server, no database, no API keys.
 - Requires `getUserMedia` — HTTPS or `localhost` only.
