@@ -1,5 +1,7 @@
 "use client";
 
+// focuses basically on the toolpanel component
+
 import type { GestureMode } from "@/types/gestures";
 
 const PRESET_COLORS = [
